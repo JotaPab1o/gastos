@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Libreta de Gastos</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --paper: #EFEEE6;
+    --paper-card: #FBFAF6;
+    --ink: #1C2321;
+    --ink-soft: #56605C;
+    --teal: #1F6F6B;
+    --teal-dark: #124D49;
+    --coral: #C2492E;
+    --coral-bg: #F3DED6;
+    --mustard: #B9832A;
+    --mustard-bg: #F1E4C8;
+    --line: #D8D3C4;
+    --line-strong: #B9B29C;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px 16px 60px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 4px;
+  }
+
+  .header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 21px;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .header .subtitle {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+
+  .receipt-total {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin: 16px 0 18px;
+    position: relative;
+  }
+
+  .receipt-total::after {
+    content: "";
+    position: absolute;
+    left: 12px; right: 12px; bottom: -6px;
+    height: 6px;
+    background-image: radial-gradient(circle, var(--paper) 3px, transparent 3px);
+    background-size: 12px 12px;
+    background-position: 0 -3px;
+  }
+
+  .receipt-total .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.7;
+  }
+
+  .receipt-total .amount {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 30px;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  .receipt-total .period {
+    font-size: 11px;
+    opacity: 0.6;
+    margin-top: 4px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  #expense-input {
+    flex: 1;
+    height: 44px;
+    border-radius: 8px;
+    border: 1px solid var(--line-strong);
+    background: var(--paper-card);
+    padding: 0 12px;
+    font-size: 15px;
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+  }
+
+  #expense-input:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 2px rgba(31,111,107,0.15);
+  }
+
+  #add-btn {
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 8px;
+    border: none;
+    background: var(--teal);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+  }
+
+  #add-btn:active { background: var(--teal-dark); }
+
+  .hint {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin: 0 2px 20px;
+  }
+
+  .hint b { color: var(--ink); font-weight: 600; }
+
+  .section-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    margin: 22px 2px 10px;
+  }
+
+  .chips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+  }
+
+  .chip {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: var(--paper-card);
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .chip.active {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .chip .amt {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--ink-soft);
+    font-size: 11.5px;
+  }
+
+  .chip.active .amt { color: var(--paper); opacity: 0.75; }
+
+  .bars {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .bar-row { font-size: 12.5px; }
+
+  .bar-row .top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .bar-row .top .name { font-weight: 500; }
+
+  .bar-row .top .val {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--ink-soft);
+  }
+
+  .bar-track {
+    height: 6px;
+    background: var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: var(--teal);
+    border-radius: 4px;
+  }
+
+  .ticket {
+    background: var(--paper-card);
+    border: 1px solid var(--line);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    position: relative;
+  }
+
+  .ticket-tear {
+    height: 10px;
+    border-radius: 10px 10px 0 0;
+    border: 1px solid var(--line);
+    border-bottom: 1px dashed var(--line-strong);
+    background: var(--paper-card);
+  }
+
+  .ticket-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .ticket-left { flex: 1; min-width: 0; }
+
+  .ticket-cat {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-bottom: 6px;
+  }
+
+  .ticket-text {
+    font-size: 14px;
+    color: var(--ink);
+    overflow-wrap: break-word;
+  }
+
+  .ticket-meta {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  .ticket-right {
+    text-align: right;
+    flex: 0 0 auto;
+  }
+
+  .ticket-amount {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 16px;
+    white-space: nowrap;
+  }
+
+  .ticket-del {
+    margin-top: 6px;
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px 16px;
+    color: var(--ink-soft);
+    font-size: 13px;
+    border: 1px dashed var(--line-strong);
+    border-radius: 10px;
+  }
+
+  .footer-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .footer-actions button {
+    flex: 1;
+    height: 42px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+  }
+
+  #export-btn {
+    border: 1px solid var(--teal);
+    background: transparent;
+    color: var(--teal-dark);
+  }
+
+  #reset-btn {
+    border: 1px solid var(--coral);
+    background: transparent;
+    color: var(--coral);
+  }
+
+  .loading-msg {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 13px;
+    padding: 30px 0;
+  }
+
+  .warn-msg {
+    font-size: 11.5px;
+    color: var(--coral);
+    margin: -2px 2px 14px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div>
+      <h1>Mi libreta de gastos</h1>
+      <div class="subtitle">Escribe y yo entiendo el resto</div>
+    </div>
+  </div>
+
+  <div class="receipt-total">
+    <div class="label">Total registrado</div>
+    <div class="amount" id="total-amount">$0</div>
+    <div class="period" id="total-period">0 movimientos</div>
+  </div>
+
+  <div class="input-row">
+    <input type="text" id="expense-input" placeholder="empanadas 5000, uber 3000..." />
+    <button id="add-btn">Agregar</button>
+  </div>
+  <div class="hint">Prueba con <b>"empanadas 5000"</b>, <b>"monster 1500"</b>, <b>"cine 8000"</b> o <b>"uber 4200"</b>. Yo detecto el monto y la categoría solo.</div>
+  <div class="warn-msg" id="warn-msg" style="display:none;"></div>
+
+  <div id="dashboard" style="display:none;">
+    <div class="section-label">Por categoría</div>
+    <div class="chips" id="chips"></div>
+    <div class="bars" id="bars"></div>
+  </div>
+
+  <div class="section-label">Google Sheet</div>
+  <div class="input-row">
+    <input type="text" id="sheet-url" placeholder="Pega aquí la URL de tu Apps Script (…/exec)" />
+    <button id="sheet-save-btn">Guardar</button>
+  </div>
+  <div class="hint" id="sheet-status">Sin conectar todavía. Los gastos se guardan solo en este celular hasta que conectes tu Google Sheet.</div>
+
+  <div class="section-label">Movimientos</div>
+  <div id="list"></div>
+
+  <div class="footer-actions">
+    <button id="export-btn">Exportar CSV</button>
+    <button id="reset-btn">Borrar todo</button>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = {
+  energetica: { label: 'Energética', icon: '⚡', bg: '#F1E4C8', fg: '#8A5A0F',
+    keywords: ['monster','red bull','redbull','bebida energetica','bebida energética','gatorade energ','powerade','baterizada','cafe','café','nescafe','espresso','capuchino','cappuccino','latte','starbucks','juan valdez'] },
+  comida: { label: 'Comida', icon: '🍽', bg: '#E4E9D6', fg: '#4C6122',
+    keywords: [
+      'empanada','empanadas','pizza','hamburguesa','completo','sopaipilla','sandwich','sándwich','choripan','choripán',
+      'almuerzo','desayuno','once','cena','colacion','colación','comida','comi','comí','almorc','cene','cené','desayune','desayuné',
+      'restaurante','restaurant','fuente de soda','picada','menu del dia','menú del día',
+      'sushi','ramen','pasta','tallarines','arroz','ensalada','sopa','cazuela','pastel de choclo','porotos','lentejas','charquican','charquicán','curanto','mote con huesillo','pebre',
+      'pollo','carne','asado','vacuno','cerdo','pescado','mariscos','chorrillana','anticucho','parrilla','parrillada',
+      'pan','marraqueta','hallulla','queque','torta','kuchen','pastel','galletas','dulces','chocolate','helado','postre',
+      'supermercado','super','feria','verduleria','verdulería','carniceria','carnicería','almacen','almacén','minimarket','despensa',
+      'jumbo','lider','líder','santa isabel','tottus','unimarc','ekono','oxxo','alvi','mayorista 10',
+      'delivery','rappi','pedidosya','uber eats','cornershop',
+      'mcdonalds','mcdonald','burger king','kfc','doggis','domino','dominos','telepizza','pizza hut','subway','papa johns','juan maestro','fritz','schop dog',
+      'cafeteria','cafetería','panaderia','panadería','pasteleria','pastelería','confiteria','confitería',
+      'bebida','coca cola','fanta','sprite','jugo','nectar','néctar','agua mineral','cerveza','vino','pisco','trago','copete','carrete',
+      'snack','papas fritas','doritos','completos','fritanga'
+    ] },
+  transporte: { label: 'Transporte', icon: '🚗', bg: '#DCE6EF', fg: '#1F4E6E',
+    keywords: ['uber','taxi','bencina','gasolina','metro','bus','micro','colectivo','cabify','didi','beat ','peaje','estacionamiento','pasaje','transantiago','red bip','tarjeta bip','bip!','revision tecnica','revisión técnica','permiso de circulacion','permiso de circulación','neumatico','neumático','mecanico','mecánico','taller auto','estacionar'] },
+  entretenimiento: { label: 'Entretenimiento', icon: '🎮', bg: '#EADCEF', fg: '#5C2E6E',
+    keywords: ['juego','juegos','cine','netflix','spotify','disney','hbo','max ','amazon prime','ps5','playstation','steam','xbox','nintendo','bar ','pub','discoteca','disco','salida','fiesta','entrada','concierto','festival','videojuego','apuesta','apuestas','loteria','lotería','kino','polla','recital','teatro','museo','parque de diversiones','paseo'] },
+  salud: { label: 'Salud', icon: '💊', bg: '#F3DED6', fg: '#8A3A1F',
+    keywords: ['farmacia','remedio','medicamento','medico','médico','doctor','dentista','clinica','clínica','isapre','fonasa','consulta','examen medico','examen médico','psicologo','psicólogo','psiquiatra','kinesiologo','kinesiólogo','salcobrand','cruz verde','farmacias ahumada','ahumada'] },
+  hogar: { label: 'Hogar y cuentas', icon: '🏠', bg: '#E6E2D8', fg: '#5A5240',
+    keywords: ['luz','agua','gas ','arriendo','internet','wifi','cuenta de la luz','contribuciones','gastos comunes','celular','plan telefono','plan teléfono','entel','movistar','wom','claro','vtr','mundo pacifico','mundo pacífico','muebles','sodimac','easy','construmart','ferreteria','ferretería','aseo','limpieza','detergente'] },
+  compras: { label: 'Ropa y compras', icon: '🛍', bg: '#F0E2D6', fg: '#8A4E1F',
+    keywords: ['ropa','zapatillas','zapatos','polera','pantalon','pantalón','chaqueta','falabella','paris','ripley','h&m','zara','tienda','compra','regalo','mall','outlet'] },
+  tecnologia: { label: 'Tecnología', icon: '💻', bg: '#DDE7EA', fg: '#1F5A66',
+    keywords: ['notebook','computador','celular nuevo','audifonos','audífonos','cargador','pcfactory','pc factory','mouse','teclado','monitor','impresora','software','suscripcion app','suscripción app'] },
+  mascotas: { label: 'Mascotas', icon: '🐾', bg: '#E7E4D8', fg: '#5F5533',
+    keywords: ['perro','gato','veterinario','petshop','pet shop','alimento mascota','comida perro','comida gato','purina','dog chow'] },
+  educacion: { label: 'Educación', icon: '📚', bg: '#DEE3F0', fg: '#2C3F8A',
+    keywords: ['universidad','colegio','curso','libro','matricula','matrícula','arancel','duoc','preuniversitario','certificacion','certificación'] },
+  otros: { label: 'Otros', icon: '📎', bg: '#E3E1DA', fg: '#56605C', keywords: [] }
+};
+const CAT_ORDER = ['energetica','comida','transporte','entretenimiento','salud','hogar','compras','tecnologia','mascotas','educacion','otros'];
+
+let expenses = [];
+let activeFilter = null;
+let sheetUrl = '';
+const STORAGE_KEY = 'gastos:data';
+const SHEET_URL_KEY = 'gastos:sheet-url';
+
+function detectCategory(text) {
+  const t = text.toLowerCase();
+  for (const key of CAT_ORDER) {
+    if (key === 'otros') continue;
+    const kws = CATEGORIES[key].keywords;
+    for (const kw of kws) {
+      if (t.includes(kw)) return key;
+    }
+  }
+  return 'otros';
+}
+
+function extractAmount(text) {
+  const match = text.match(/\d[\d.,]*\d|\d/);
+  if (!match) return null;
+  const digits = match[0].replace(/[.,]/g, '');
+  return parseInt(digits, 10);
+}
+
+function formatCLP(n) {
+  return '$' + Math.round(n).toLocaleString('es-CL');
+}
+
+async function loadExpenses() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    expenses = raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    expenses = [];
+  }
+  render();
+}
+
+function loadSheetUrl() {
+  sheetUrl = localStorage.getItem(SHEET_URL_KEY) || '';
+  const input = document.getElementById('sheet-url');
+  const status = document.getElementById('sheet-status');
+  input.value = sheetUrl;
+  status.textContent = sheetUrl
+    ? 'Conectado. Cada gasto nuevo se envía también a tu Google Sheet.'
+    : 'Sin conectar todavía. Los gastos se guardan solo en este celular hasta que conectes tu Google Sheet.';
+}
+
+function saveSheetUrl() {
+  const val = document.getElementById('sheet-url').value.trim();
+  sheetUrl = val;
+  localStorage.setItem(SHEET_URL_KEY, val);
+  const status = document.getElementById('sheet-status');
+  status.textContent = val
+    ? 'Guardado. Agrega un gasto de prueba y revisa tu Google Sheet para confirmar que llegó.'
+    : 'Desconectado. Los gastos se guardarán solo en este celular.';
+}
+
+function sendToSheet(entry) {
+  if (!sheetUrl) return;
+  const payload = {
+    fecha: new Date(entry.date).toLocaleString('es-CL'),
+    descripcion: entry.text,
+    categoria: CATEGORIES[entry.category].label,
+    monto: entry.amount
+  };
+  fetch(sheetUrl, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  }).catch(err => console.error('No se pudo enviar a Google Sheet', err));
+}
+
+async function saveExpenses() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
+  } catch (e) {
+    console.error('No se pudo guardar', e);
+  }
+}
+
+function addExpense(rawText) {
+  const text = rawText.trim();
+  if (!text) return;
+  const amount = extractAmount(text);
+  const category = detectCategory(text);
+  const warnEl = document.getElementById('warn-msg');
+  if (amount === null) {
+    warnEl.style.display = 'block';
+    warnEl.textContent = 'No encontré un monto en ese texto, se guardó como $0. Puedes borrarlo y escribirlo de nuevo con un número.';
+  } else {
+    warnEl.style.display = 'none';
+  }
+  expenses.unshift({
+    id: Date.now() + Math.random().toString(16).slice(2),
+    text: text,
+    amount: amount || 0,
+    category: category,
+    date: new Date().toISOString()
+  });
+  saveExpenses();
+  sendToSheet(expenses[0]);
+  document.getElementById('expense-input').value = '';
+  render();
+}
+
+function deleteExpense(id) {
+  expenses = expenses.filter(e => e.id !== id);
+  saveExpenses();
+  render();
+}
+
+function exportCSV() {
+  let csv = 'fecha,descripcion,categoria,monto\n';
+  expenses.slice().reverse().forEach(e => {
+    const fecha = new Date(e.date).toLocaleString('es-CL');
+    const desc = '"' + e.text.replace(/"/g, '""') + '"';
+    const cat = CATEGORIES[e.category].label;
+    csv += `${fecha},${desc},${cat},${e.amount}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mis-gastos.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function resetAll() {
+  if (!confirm('¿Borrar todos los movimientos guardados? Esto no se puede deshacer.')) return;
+  expenses = [];
+  saveExpenses();
+  render();
+}
+
+function render() {
+  const filtered = activeFilter ? expenses.filter(e => e.category === activeFilter) : expenses;
+
+  const total = filtered.reduce((s, e) => s + e.amount, 0);
+  document.getElementById('total-amount').textContent = formatCLP(total);
+  document.getElementById('total-period').textContent =
+    filtered.length + (filtered.length === 1 ? ' movimiento' : ' movimientos') +
+    (activeFilter ? ' · ' + CATEGORIES[activeFilter].label : '');
+
+  const byCat = {};
+  CAT_ORDER.forEach(k => byCat[k] = 0);
+  expenses.forEach(e => byCat[e.category] += e.amount);
+  const grandTotal = expenses.reduce((s, e) => s + e.amount, 0);
+
+  const dashboard = document.getElementById('dashboard');
+  const chipsEl = document.getElementById('chips');
+  const barsEl = document.getElementById('bars');
+
+  if (expenses.length === 0) {
+    dashboard.style.display = 'none';
+  } else {
+    dashboard.style.display = 'block';
+    chipsEl.innerHTML = '';
+    const allChip = document.createElement('div');
+    allChip.className = 'chip' + (activeFilter === null ? ' active' : '');
+    allChip.innerHTML = `<span>Todas</span><span class="amt">${formatCLP(grandTotal)}</span>`;
+    allChip.onclick = () => { activeFilter = null; render(); };
+    chipsEl.appendChild(allChip);
+
+    barsEl.innerHTML = '';
+    CAT_ORDER.forEach(key => {
+      const amt = byCat[key];
+      if (amt <= 0) return;
+      const cat = CATEGORIES[key];
+      const chip = document.createElement('div');
+      chip.className = 'chip' + (activeFilter === key ? ' active' : '');
+      chip.innerHTML = `<span>${cat.icon} ${cat.label}</span><span class="amt">${formatCLP(amt)}</span>`;
+      chip.onclick = () => { activeFilter = (activeFilter === key ? null : key); render(); };
+      chipsEl.appendChild(chip);
+
+      const pct = grandTotal > 0 ? Math.round((amt / grandTotal) * 100) : 0;
+      const row = document.createElement('div');
+      row.className = 'bar-row';
+      row.innerHTML = `
+        <div class="top">
+          <span class="name">${cat.icon} ${cat.label}</span>
+          <span class="val">${formatCLP(amt)} · ${pct}%</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:${cat.fg};"></div></div>
+      `;
+      barsEl.appendChild(row);
+    });
+  }
+
+  const listEl = document.getElementById('list');
+  listEl.innerHTML = '';
+  if (filtered.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = expenses.length === 0
+      ? 'Todavía no registras gastos. Escribe algo como "empanadas 5000" arriba.'
+      : 'No hay movimientos en esta categoría.';
+    listEl.appendChild(empty);
+    return;
+  }
+
+  filtered.forEach(e => {
+    const cat = CATEGORIES[e.category];
+    const d = new Date(e.date);
+    const dateStr = d.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' }) +
+      ' · ' + d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+
+    const wrap = document.createElement('div');
+    const tear = document.createElement('div');
+    tear.className = 'ticket-tear';
+    const ticket = document.createElement('div');
+    ticket.className = 'ticket';
+    ticket.innerHTML = `
+      <div class="ticket-row">
+        <div class="ticket-left">
+          <div class="ticket-cat" style="background:${cat.bg}; color:${cat.fg};">${cat.icon} ${cat.label}</div>
+          <div class="ticket-text">${e.text.replace(/</g,'&lt;')}</div>
+          <div class="ticket-meta">${dateStr}</div>
+        </div>
+        <div class="ticket-right">
+          <div class="ticket-amount">${formatCLP(e.amount)}</div>
+          <button class="ticket-del" data-id="${e.id}">Eliminar</button>
+        </div>
+      </div>
+    `;
+    wrap.appendChild(tear);
+    wrap.appendChild(ticket);
+    listEl.appendChild(wrap);
+  });
+
+  listEl.querySelectorAll('.ticket-del').forEach(btn => {
+    btn.addEventListener('click', () => deleteExpense(btn.dataset.id));
+  });
+}
+
+document.getElementById('add-btn').addEventListener('click', () => {
+  addExpense(document.getElementById('expense-input').value);
+});
+document.getElementById('expense-input').addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter') addExpense(document.getElementById('expense-input').value);
+});
+document.getElementById('export-btn').addEventListener('click', exportCSV);
+document.getElementById('reset-btn').addEventListener('click', resetAll);
+document.getElementById('sheet-save-btn').addEventListener('click', saveSheetUrl);
+
+loadSheetUrl();
+loadExpenses();
+</script>
+</body>
+</html>
